@@ -1,0 +1,5 @@
+// conv2d (완료)
+// batchnorm2d (완료)
+// pooling (완료)
+// global average pooling (완료)
+// fully connected(완료)
