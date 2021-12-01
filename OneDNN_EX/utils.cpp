@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <iomanip>
 #include <vector>
+#include "utils.h"
 
 void initTensor(std::vector<float> &output, uint64_t tot, float start, float step)
 {
@@ -29,4 +30,12 @@ void valueCheck(std::vector<float> &data, int IN, int IC, int IH, int IW) {
 			}std::cout << std::endl; std::cout << std::endl;
 		}
 	}
+}
+
+void tofile(std::vector<float> &Buffer, std::string fname) {
+	std::ofstream fs(fname, std::ios::binary);
+	if (fs.is_open())
+		fs.write((const char*)Buffer.data(), Buffer.size() * sizeof(float));
+	fs.close();
+	std::cout << "Done! file production to " << fname << std::endl;
 }

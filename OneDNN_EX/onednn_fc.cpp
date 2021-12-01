@@ -141,7 +141,7 @@ void pooling_onednn(
 
 	if (mode == 1) {//pooling_max
 		auto pooling_d = pooling_v2_forward::desc(prop_kind::forward_inference, algorithm::pooling_max,
-			INPUT.get_desc(), pooling_dst_md, { SH, SW }, { KH, KW }, { TP, LP }, { BP, RP }, { DH, DW });
+			INPUT.get_desc(), pooling_dst_md, { SH, SW }, { KH, KW }, { DH, DW }, { TP, LP }, { BP, RP });
 		pooling_pd = pooling_v2_forward::primitive_desc(pooling_d, engine);
 	}
 	else {//pooling_avg

@@ -36,8 +36,14 @@
     <ClCompile Include="onednn_fc.cpp">
       <Filter>layers</Filter>
     </ClCompile>
+    <ClCompile Include="weight_loader.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="data_loader.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
     <ClCompile Include="utils.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>layers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -45,6 +51,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="weight_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="data_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
