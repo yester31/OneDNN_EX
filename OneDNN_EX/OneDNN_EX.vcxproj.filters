@@ -36,13 +36,19 @@
     <ClCompile Include="onednn_fc.cpp">
       <Filter>layers</Filter>
     </ClCompile>
-    <ClCompile Include="weight_loader.cpp">
+    <ClCompile Include="utils.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="onednn_activation.cpp">
       <Filter>layers</Filter>
     </ClCompile>
     <ClCompile Include="data_loader.cpp">
-      <Filter>layers</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="utils.cpp">
+    <ClCompile Include="weight_loader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="onednn_eltwise.cpp">
       <Filter>layers</Filter>
     </ClCompile>
   </ItemGroup>

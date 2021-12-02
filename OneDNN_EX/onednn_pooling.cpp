@@ -128,16 +128,16 @@ void pooling_onednn(
 	std::vector<primitive> &net,
 	std::vector<std::unordered_map<int, memory>> &net_args,
 	engine &engine, stream &engine_stream,
-	int N, int IC, int IH, int IW,
+	tensor_dims &t_dims,
 	int KH, int KW, int	SH, int SW,
 	int TP, int BP, int LP, int RP,
 	int DH, int DW, int mode,
 	int Acti = 0)
 {
-	const memory::dim OH = (IH + TP + BP - (KH - 1) * DH - 1) / SH + 1;
-	const memory::dim OW = (IW + LP + RP - (KW - 1) * DW - 1) / SW + 1;
+	const memory::dim OH = (t_dims.IH + (TP + BP) - (DH * (KH - 1) + KH)) / SH + 1;
+	const memory::dim OW = (t_dims.IW + (LP + RP) - (DW * (KW - 1) + KW)) / SW + 1;
 
-	auto pooling_dst_md = memory::desc({ N, IC, OH, OW }, dt::f32, tag::nchw);
+	auto pooling_dst_md = memory::desc({ t_dims.N, t_dims.IC, OH, OW }, dt::f32, tag::nchw);
 	OUTPUT = memory(pooling_dst_md, engine);
 
 	pooling_v2_forward::primitive_desc pooling_pd;
@@ -153,7 +153,7 @@ void pooling_onednn(
 		pooling_pd = pooling_v2_forward::primitive_desc(pooling_d, engine);
 	}
 
-	auto workspace_mem = memory(pooling_pd.workspace_desc(), engine);
+	//auto workspace_mem = memory(pooling_pd.workspace_desc(), engine);
 
 	// Create the primitive.
 	auto pooling_prim = pooling_v2_forward(pooling_pd);
@@ -162,10 +162,12 @@ void pooling_onednn(
 	// Primitive arguments.
 	net_args.push_back({
 		{ DNNL_ARG_SRC, INPUT },
-		{ DNNL_ARG_WORKSPACE, workspace_mem },
+		//{ DNNL_ARG_WORKSPACE, workspace_mem },
 		{ DNNL_ARG_DST, OUTPUT }
 		});
 
+	t_dims.IH = OH;
+	t_dims.IW = OW;
 }
 
 
@@ -180,80 +182,30 @@ void simple_net(engine::kind engine_kind, int times = 100) {
 	std::vector<primitive> net;
 	std::vector<std::unordered_map<int, memory>> net_args;
 
-	int OC = 1;
 	int N = 1;
 	int IC = 1;
 	int IH = 4;
 	int IW = 4;
-	int KH = 3;
-	int KW = 3;
-	int SH = 1;
-	int SW = 1;
-	int TP = 1;
-	int BP = 1;
-	int LP = 1;
-	int RP = 1;
-
-	// weight[OC][lC][KH][KW] 
-	// 임시 weight 값 
-	std::vector<float> weights(OC * IC * KH * KW);
-	initTensor(weights, weights.size(), 1, 0);
-	valueCheck(weights, OC, IC, KH, KW);
-
-	// bias[OC]
-	// 임시 bias 값
-	std::vector<float> scale_shift(OC * 2);
-	initTensor(scale_shift, scale_shift.size(), 2, 0);
-	valueCheck(scale_shift, OC, 1, 1, 1);
-
-	std::vector<float> mean(OC);
-	initTensor(mean, mean.size(), 2, 0);
-	valueCheck(mean, OC, 1, 1, 1);
-
-	std::vector<float> var(OC);
-	initTensor(var, var.size(), 2, 0);
-	valueCheck(var, OC, 1, 1, 1);
 
 	// d[IN][IC][IH][IW] 
 	// 임시 input 값 
 	std::vector<float> inputs(N * IC * IH * IW);
-	initTensor(inputs, inputs.size(), -5, 1);
+	initTensor(inputs, inputs.size(), 0, 1);
 	valueCheck(inputs, N, IC, IH, IW);
-
-	// d[IN][OC][OH][OW] 
-	// 임시 input 값 
-	int OH = (IH - KH + TP + BP) / SH + 1; // output height
-	int OW = (IW - KW + LP + RP) / SW + 1; // output width
+	tensor_dims t_dims{ N, IC, IH, IW };
 
 	//[inputs]
 	auto conv_src_md = memory::desc({ N, IC, IH, IW }, dt::f32, tag::nchw);
 	auto user_src_memory = memory(conv_src_md, engine);
 	write_to_dnnl_memory(inputs.data(), user_src_memory);
 
-	memory output_s;
-	conv2d_onednn_wo_bias(output_s, user_src_memory,
-		weights,
-		net, net_args, engine, stream,
-		N, IC, IH, IW, OC,
-		KH, KW, SH, SW,
-		TP, BP, LP, RP, 0);
-
-	memory output_s2;
-	bn_onednn(output_s2, output_s,
-		scale_shift, mean, var,
-		net, net_args, engine, stream,
-		N, OC, 0);
-
 	memory output_s3;
-	pooling_onednn(output_s3, output_s2, net, net_args, engine, stream, 
-		N, OC, OH, OW, 
-		2, 2, 2, 2, 
-		0, 0, 0, 0, 
-		1, 1, 
+	pooling_onednn(output_s3, user_src_memory, net, net_args, engine, stream,
+		t_dims,
+		3, 3, 2, 2, 
+		1, 1, 1, 1, 
+		0, 0, 
 		1);
-
-
-	std::vector<float> outputs(N * OC * OH/2 * OW/2);
 
 
 	//[Execute model]
@@ -264,8 +216,12 @@ void simple_net(engine::kind engine_kind, int times = 100) {
 	}
 
 	stream.wait();
+	//std::vector<float> outputs2(N * OC * OH * OW);
+	//read_from_dnnl_memory(outputs2.data(), net_args.at(net.size() - 2).find(DNNL_ARG_DST)->second);
+	//valueCheck(outputs2, N, OC, OH, OW);
+	std::vector<float> outputs(t_dims.N * t_dims.IC * t_dims.IH * t_dims.IW);
 	read_from_dnnl_memory(outputs.data(), net_args.at(net.size() - 1).find(DNNL_ARG_DST)->second);
-	valueCheck(outputs, N, OC, OH/2, OW/2);
+	valueCheck(outputs, t_dims.N, t_dims.IC, t_dims.IH, t_dims.IW);
 	std::cout << "done!!!" << std::endl;
 	std::cout << "layer count : " << net.size() << std::endl;
 }

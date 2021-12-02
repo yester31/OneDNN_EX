@@ -15,6 +15,10 @@ void initTensor(std::vector<float> &output, uint64_t tot, float start, float ste
 
 void valueCheck(std::vector<float> &data, int IN, int IC, int IH, int IW) {
 	std::cout << "===== valueCheck func =====" << std::endl;
+	if (data.size() != IN * IC * IH * IW) {
+		std::cout << "Size Dismatched " << data.size() << " != " << IN * IC * IH * IW << std::endl;
+		exit(0);
+	}
 	int N_offset = IC * IH * IW;
 	int C_offset, H_offset, W_offset, g_idx;
 	for (int ⁠n_idx = 0; ⁠n_idx < IN; ⁠n_idx++) {

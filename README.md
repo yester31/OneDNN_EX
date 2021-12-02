@@ -9,14 +9,16 @@
 
 ## OneDNN Simple Classification model (ongoing)
 - resnet18 Model
-	- Function abstraction in an easy-to-use form (completed) 
-	- Primitive function validation (completed)
-	- Weight loader (completed)
-	- Data loader (completed)
-	- Image preprocess (completed)
-	- Modeling (ongoing)
-	- Model Architecture Optimization (preparing)
-	- Performace evaluation(preparing)
+	- (completed) Function abstraction in an easy-to-use form  
+	- (completed) Primitive function validation 
+	- (completed) Weight loader 
+	- (completed) Data loader 
+	- (completed) Image preprocess 
+	- (completed) Modeling 
+	- (completed) Match all results with PyTorch 
+	- (preparing) Code structure refactoring 
+	- (preparing) Model Architecture Optimization 
+	- (preparing) Performace evaluation
 
 
 ## Custom Primitive using DPC++(preparing)
