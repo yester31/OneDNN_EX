@@ -135,6 +135,90 @@ void conv2d_onednn_wo_bias(
 
 }
 
+void conv2d_onednn_wo_bias2(
+	memory &OUTPUT, memory &INPUT,
+	std::vector<float> &weights,
+	std::vector<primitive> &net,
+	std::vector<std::unordered_map<int, memory>> &net_args,
+	engine &engine, stream &engine_stream,
+	int N, int IC, int IH, int IW, int OC,
+	int KH, int KW, int	SH, int SW,
+	int TP, int BP, int LP, int RP,
+	int Acti = 0)
+{
+	int OH = (IH - KH + TP + BP) / SH + 1; // output height
+	int OW = (IW - KW + LP + RP) / SW + 1; // output width
+
+	auto conv_dst_md = memory::desc({ N, OC, OH, OW }, dt::f32, tag::nchw);
+	OUTPUT = memory(conv_dst_md, engine);
+
+	auto conv_weights_md = memory::desc({ OC, IC, KH, KW }, dt::f32, tag::oihw);
+	auto user_weights_mem = memory(conv_weights_md, engine);
+	write_to_dnnl_memory(weights.data(), user_weights_mem);
+
+	auto conv_src_md2 = memory::desc({ N, IC, IH, IW }, dt::f32, tag::any);
+	auto conv_weights_md2 = memory::desc({ OC, IC, KH, KW }, dt::f32, tag::any);
+	auto conv_dst_md2 = memory::desc({ N, OC, OH, OW }, dt::f32, tag::any);
+
+	// Create operation descriptor.
+	auto conv_desc = convolution_forward::desc(prop_kind::forward_inference, algorithm::convolution_auto,
+		conv_src_md2, conv_weights_md2, conv_dst_md2, { SH, SW }, { TP, LP }, { BP, RP });
+
+	// Activation func
+	convolution_forward::primitive_desc conv_pd;
+
+	if (Acti == 1) {
+		// Create primitive post-ops (ReLU).
+		const float scale = 1.f;
+		const float alpha = 0.f;
+		const float beta = 0.f;
+		post_ops conv_ops;
+		conv_ops.append_eltwise(scale, algorithm::eltwise_relu, alpha, beta);
+		primitive_attr conv_attr;
+		conv_attr.set_post_ops(conv_ops);
+
+		// Create primitive descriptor.
+		conv_pd = convolution_forward::primitive_desc(conv_desc, conv_attr, engine);
+	}
+	else { // linear
+		conv_pd = convolution_forward::primitive_desc(conv_desc, engine);
+	}
+
+	auto conv_src_mem = INPUT;
+	auto conv_weights_mem = user_weights_mem;
+	auto conv_dst_mem = OUTPUT;
+
+	if (conv_pd.src_desc() != INPUT.get_desc()) {
+		conv_src_mem = memory(conv_pd.src_desc(), engine);
+
+		reorder(INPUT, conv_src_mem).execute(engine_stream, INPUT, conv_src_mem);
+		engine_stream.wait();
+	}
+
+	if (conv_pd.weights_desc() != user_weights_mem.get_desc()) {
+		conv_weights_mem = memory(conv_pd.weights_desc(), engine);
+
+		reorder(user_weights_mem, conv_weights_mem).execute(engine_stream, user_weights_mem, conv_weights_mem);
+		engine_stream.wait();
+	}
+
+	if (conv_pd.dst_desc() != OUTPUT.get_desc()) {
+		conv_dst_mem = memory(conv_pd.dst_desc(), engine);
+	}
+
+	// Create the primitive.
+	auto conv_prim = convolution_forward(conv_pd);
+	net.push_back(conv_prim);
+
+	// Primitive arguments.
+	net_args.push_back({
+		{ DNNL_ARG_SRC, INPUT },
+		{ DNNL_ARG_WEIGHTS, user_weights_mem },
+		{ DNNL_ARG_DST, OUTPUT }
+		});
+
+}
+
 
 void simple_net(engine::kind engine_kind, int times = 100) {
 
@@ -190,7 +274,7 @@ void simple_net(engine::kind engine_kind, int times = 100) {
 	write_to_dnnl_memory(inputs.data(), user_src_memory);
 
 	memory output_s;
-	conv2d_onednn_wo_bias(output_s, user_src_memory,
+	conv2d_onednn_wo_bias2(output_s, user_src_memory,
 		weights,
 		net,
 		net_args,
@@ -213,7 +297,7 @@ void simple_net(engine::kind engine_kind, int times = 100) {
 	for (int j = 0; j < 1; ++j) {
 		assert(net.size() == net_args.size() && "something is missing");
 		for (size_t i = 0; i < net.size(); ++i)
-			net.at(i).execute(stream, net_args.at(i));
+			net.at(i).execute(stream, net_args.at(i)); 
 	}
 
 	stream.wait();

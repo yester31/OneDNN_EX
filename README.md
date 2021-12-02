@@ -17,7 +17,7 @@
 	- (completed) Modeling 
 	- (completed) Match all results with PyTorch 
 	- (preparing) Code structure refactoring 
-	- (preparing) Model Architecture Optimization 
+	- (preparing) Optimization 
 	- (preparing) Performace evaluation
 
 
