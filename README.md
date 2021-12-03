@@ -18,9 +18,9 @@
 - Match all results with PyTorch 
 - Optimization 
 - Performace evaluation
-- 1) Specific data type version  -> 6765 [ms] (resnet18_v1.cpp)
-- 2) Any data type version  -> 2466 [ms] (resnet18_v2.cpp)
-- PyTorch (cpu) -> 2759 [ms]
+- 1) Specific data type version (cpu)  -> 6765 [ms] (resnet18_v1.cpp)
+- 2) Any data type version (cpu)  -> 2466 [ms] (resnet18_v2.cpp)
+- 3) PyTorch (cpu) -> 2759 [ms]
 
 ## Custom Primitive using DPC++(preparing)
 -
