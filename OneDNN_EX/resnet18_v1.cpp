@@ -164,8 +164,6 @@ void resnet18(std::vector<primitive> &net, std::vector<std::unordered_map<int, m
 
 	memory global_avg_pooling = gap_onednn(layer4_relu1_5, net, net_args, engine, stream, t_dims);
 	memory fc1 = fc_onednn(global_avg_pooling, net, net_args, engine, stream, weightMap["fc.weight"].values, weightMap["fc.bias"].values, t_dims, 1000);
-
-	
 }
 
 int main(int argc, char **argv) {
@@ -235,6 +233,12 @@ int main(int argc, char **argv) {
 	std::vector<float> outputs(t_dims.N * t_dims.IC* t_dims.IH* t_dims.IW);
 	read_from_dnnl_memory(outputs.data(), net_args.at(net.size() - 1).find(DNNL_ARG_DST)->second);
 	//tofile(outputs);
+	//std::cout << t_dims.N << ", " << t_dims.IC << ", " << t_dims.IH << ", " << t_dims.IW << std::endl;
+	//std::cout << "size : " << outputs.size() << std::endl;
+	//std::cout << "layer count : " << net.size() << std::endl;
+	//std::cout << iter_count << " th Iteration, Total dur time :: " << dur_time << " milliseconds" << std::endl;
+	//exit(0);
+	
 	//valueCheck(outputs, t_dims.N , t_dims.IC, t_dims.IH, t_dims.IW);
 	// 6) 결과 출력
 	std::cout << "==================================================" << std::endl;
@@ -248,27 +252,23 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-
 memory conv2d_onednn_wo_bias(memory &INPUT, std::vector<primitive> &net, std::vector<std::unordered_map<int, memory>> &net_args, engine &engine, stream &engine_stream, 
-	std::vector<float> &weights, tensor_dims &t_dims, int OC, int KH, int KW, int SH, int SW, int TP, int BP, int LP, int RP, int Acti)
+	std::vector<float> &weights, tensor_dims &t_dims, int OC, int KH, int KW, int SH, int SW, int TP, int BP, int LP, int RP, int Acti) 
 {
 	int OH = (t_dims.IH - KH + TP + BP) / SH + 1; // output height
 	int OW = (t_dims.IW - KW + LP + RP) / SW + 1; // output width
+
+	auto conv_dst_md = memory::desc({ t_dims.N, OC, OH, OW }, dt::f32, tag::nchw);
+	auto OUTPUT = memory(conv_dst_md, engine);
 
 	auto conv_weights_md = memory::desc({ OC, t_dims.IC, KH, KW }, dt::f32, tag::oihw);
 	auto user_weights_mem = memory(conv_weights_md, engine);
 	write_to_dnnl_memory(weights.data(), user_weights_mem);
 
-	auto conv_dst_md = memory::desc({ t_dims.N, OC, OH, OW }, dt::f32, tag::nchw);
-	memory OUTPUT = memory(conv_dst_md, engine);
-
-	auto conv_src_md2 = memory::desc({ t_dims.N, t_dims.IC, t_dims.IH, t_dims.IW }, dt::f32, tag::any);
-	auto conv_weights_md2 = memory::desc({ OC, t_dims.IC, KH, KW }, dt::f32, tag::any);
-	auto conv_dst_md2 = memory::desc({ t_dims.N, OC, OH, OW }, dt::f32, tag::any);
-
 	// Create operation descriptor.
-	auto conv_desc = convolution_forward::desc(prop_kind::forward_inference, algorithm::convolution_auto, 
-		conv_src_md2, conv_weights_md2, conv_dst_md2, { SH, SW }, { TP, LP }, { BP, RP });
+	auto conv_desc = convolution_forward::desc(prop_kind::forward_inference,
+		algorithm::convolution_auto, INPUT.get_desc(), conv_weights_md,
+		conv_dst_md, { SH, SW }, { TP, LP }, { BP, RP });
 
 	// Activation func
 	convolution_forward::primitive_desc conv_pd;
@@ -285,24 +285,6 @@ memory conv2d_onednn_wo_bias(memory &INPUT, std::vector<primitive> &net, std::ve
 	}
 	else { // linear
 		conv_pd = convolution_forward::primitive_desc(conv_desc, engine);
-	}
-
-	auto conv_src_mem = INPUT;
-	auto conv_weights_mem = user_weights_mem;
-	auto conv_dst_mem = OUTPUT;
-
-	if (conv_pd.src_desc() != INPUT.get_desc()) {
-		conv_src_mem = memory(conv_pd.src_desc(), engine);
-		reorder(INPUT, conv_src_mem).execute(engine_stream, INPUT, conv_src_mem);
-	}
-
-	if (conv_pd.weights_desc() != user_weights_mem.get_desc()) {
-		conv_weights_mem = memory(conv_pd.weights_desc(), engine);
-		reorder(user_weights_mem, conv_weights_mem).execute(engine_stream, user_weights_mem, conv_weights_mem);
-	}
-
-	if (conv_pd.dst_desc() != OUTPUT.get_desc()) {
-		conv_dst_mem = memory(conv_pd.dst_desc(), engine);
 	}
 
 	// Create the primitive.

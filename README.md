@@ -7,19 +7,20 @@
 - OneDNN 2.50 (2021.4)
 
 
-## OneDNN Simple Classification model (ongoing)
+## OneDNN Simple Classification model
 - resnet18 Model
-	- (completed) Function abstraction in an easy-to-use form  
-	- (completed) Primitive function validation 
-	- (completed) Weight loader 
-	- (completed) Data loader 
-	- (completed) Image preprocess 
-	- (completed) Modeling 
-	- (completed) Match all results with PyTorch 
-	- (preparing) Code structure refactoring 
-	- (preparing) Optimization 
-	- (preparing) Performace evaluation
-
+- Function abstraction in an easy-to-use form  
+- Primitive function validation 
+- Weight loader 
+- Data loader 
+- Image preprocess 
+- Modeling 
+- Match all results with PyTorch 
+- Optimization 
+- Performace evaluation
+- 1) Specific data type version  -> 6765 [ms] (resnet18_v1.cpp)
+- 2) Any data type version  -> 2466 [ms] (resnet18_v2.cpp)
+- PyTorch (cpu) -> 2759 [ms]
 
 ## Custom Primitive using DPC++(preparing)
 -

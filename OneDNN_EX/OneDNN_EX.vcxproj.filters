@@ -24,9 +24,6 @@
     <ClCompile Include="onednn_batchnorm2d.cpp">
       <Filter>layers</Filter>
     </ClCompile>
-    <ClCompile Include="resnet18.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="onednn_pooling.cpp">
       <Filter>layers</Filter>
     </ClCompile>
@@ -50,6 +47,12 @@
     </ClCompile>
     <ClCompile Include="onednn_eltwise.cpp">
       <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="resnet18_v2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="resnet18_v1.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
