@@ -17,10 +17,16 @@
 - Modeling 
 - Match all results with PyTorch 
 - Optimization 
-- Performace evaluation
-- 1) Specific data type version (cpu)  -> 6765 [ms] (resnet18_v1.cpp)
-- 2) Any data type version (cpu)  -> 2466 [ms] (resnet18_v2.cpp)
-- 3) PyTorch (cpu) -> 2759 [ms]
+- Performace evaluation(cpu, F32)
+- 1) Reference PyTorch (Resnet18_py/inference.py)
+        - 2759 [ms]
+- 2) Specific data type version (resnet18_v1.cpp)  
+        - 6765 [ms] 
+- 3) Any data type version (resnet18_v2.cpp)
+        - 2440 [ms] 
+- 4) Any data type + fused post ops version (resnet18_v3.cpp)
+        - 2281 [ms] 
+
 
 ## Custom Primitive using DPC++(preparing)
 -

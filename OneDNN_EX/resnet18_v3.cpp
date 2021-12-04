@@ -21,11 +21,11 @@ memory conv2d_onednn_wo_bias(memory &INPUT,
 memory bn_onednn(
 	memory &INPUT, std::vector<primitive> &net, std::vector<std::unordered_map<int, memory>> &net_args, engine &engine, stream &engine_stream,
 	std::vector<float> &scale, std::vector<float> &shift, std::vector<float> &mean, std::vector<float> &var,
-	tensor_dims &t_dims, float eps = 1.e-5f);
+	tensor_dims &t_dims, float eps = 1.e-5f, int Acti = 1);
 
 memory pooling_onednn(
 	memory &INPUT, std::vector<primitive> &net, std::vector<std::unordered_map<int, memory>> &net_args, engine &engine, stream &engine_stream,
-	tensor_dims &t_dims,int KH, int KW, int	SH, int SW, int TP, int BP, int LP, int RP,	int DH, int DW, int mode);
+	tensor_dims &t_dims, int KH, int KW, int	SH, int SW, int TP, int BP, int LP, int RP, int DH, int DW, int mode);
 
 memory gap_onednn(
 	memory &INPUT, std::vector<primitive> &net, std::vector<std::unordered_map<int, memory>> &net_args, engine &engine, stream &engine_stream,
@@ -83,7 +83,7 @@ void resnet18_v2(std::vector<primitive> &net, std::vector<std::unordered_map<int
 	// net work
 	memory conv1 = conv2d_onednn_wo_bias(inputs_src_md_memory, net, net_args, engine, stream, weightMap["conv1.weight"].values, t_dims, 64, 7, 7, 2, 2, 3, 3, 3, 3);
 	memory bn_relu1 = bn_onednn(conv1, net, net_args, engine, stream, weightMap["bn1.weight"].values, weightMap["bn1.bias"].values, weightMap["bn1.running_mean"].values, weightMap["bn1.running_var"].values, t_dims, 1.e-5f);
-	bn_relu1 = activation_onednn(bn_relu1, net, net_args, engine, stream);
+	//bn_relu1 = activation_onednn(bn_relu1, net, net_args, engine, stream);
 	memory pool1 = pooling_onednn(bn_relu1, net, net_args, engine, stream, t_dims, 3, 3, 2, 2, 0, 0, 1, 1, 1, 1, 1);
 	//show_dims(t_dims);
 
@@ -91,17 +91,17 @@ void resnet18_v2(std::vector<primitive> &net, std::vector<std::unordered_map<int
 	// basicBlock1
 	memory layer1_conv1_1 = conv2d_onednn_wo_bias(pool1, net, net_args, engine, stream, weightMap["layer1.0.conv1.weight"].values, t_dims, 64, 3, 3, 1, 1, 1, 1, 1, 1);
 	memory layer1_bn_relu1_1 = bn_onednn(layer1_conv1_1, net, net_args, engine, stream, weightMap["layer1.0.bn1.weight"].values, weightMap["layer1.0.bn1.bias"].values, weightMap["layer1.0.bn1.running_mean"].values, weightMap["layer1.0.bn1.running_var"].values, t_dims, 1.e-5f);
-	layer1_bn_relu1_1 = activation_onednn(layer1_bn_relu1_1, net, net_args, engine, stream);
+	//layer1_bn_relu1_1 = activation_onednn(layer1_bn_relu1_1, net, net_args, engine, stream);
 	memory layer1_conv1_2 = conv2d_onednn_wo_bias(layer1_bn_relu1_1, net, net_args, engine, stream, weightMap["layer1.0.conv2.weight"].values, t_dims, 64, 3, 3, 1, 1, 1, 1, 1, 1);
-	memory layer1_bn1_2 = bn_onednn(layer1_conv1_2, net, net_args, engine, stream, weightMap["layer1.0.bn2.weight"].values, weightMap["layer1.0.bn2.bias"].values, weightMap["layer1.0.bn2.running_mean"].values, weightMap["layer1.0.bn2.running_var"].values, t_dims, 1.e-5f);
+	memory layer1_bn1_2 = bn_onednn(layer1_conv1_2, net, net_args, engine, stream, weightMap["layer1.0.bn2.weight"].values, weightMap["layer1.0.bn2.bias"].values, weightMap["layer1.0.bn2.running_mean"].values, weightMap["layer1.0.bn2.running_var"].values, t_dims, 1.e-5f, 0);
 	memory layer1_elt_sum1_3 = eltwise_onednn(pool1, layer1_bn1_2, net, net_args, engine, stream);
 	memory layer1_relu1_3 = activation_onednn(layer1_elt_sum1_3, net, net_args, engine, stream);
 	// basicBlock2
 	memory layer1_conv1_4 = conv2d_onednn_wo_bias(layer1_relu1_3, net, net_args, engine, stream, weightMap["layer1.1.conv1.weight"].values, t_dims, 64, 3, 3, 1, 1, 1, 1, 1, 1);
 	memory layer1_bn_relu1_4 = bn_onednn(layer1_conv1_4, net, net_args, engine, stream, weightMap["layer1.1.bn1.weight"].values, weightMap["layer1.1.bn1.bias"].values, weightMap["layer1.1.bn1.running_mean"].values, weightMap["layer1.1.bn1.running_var"].values, t_dims, 1.e-5f);
-	layer1_bn_relu1_4 = activation_onednn(layer1_bn_relu1_4, net, net_args, engine, stream);
+	//layer1_bn_relu1_4 = activation_onednn(layer1_bn_relu1_4, net, net_args, engine, stream);
 	memory layer1_conv1_5 = conv2d_onednn_wo_bias(layer1_bn_relu1_4, net, net_args, engine, stream, weightMap["layer1.1.conv2.weight"].values, t_dims, 64, 3, 3, 1, 1, 1, 1, 1, 1);
-	memory layer1_bn5 = bn_onednn(layer1_conv1_5, net, net_args, engine, stream, weightMap["layer1.1.bn2.weight"].values, weightMap["layer1.1.bn2.bias"].values, weightMap["layer1.1.bn2.running_mean"].values, weightMap["layer1.1.bn2.running_var"].values, t_dims, 1.e-5f);
+	memory layer1_bn5 = bn_onednn(layer1_conv1_5, net, net_args, engine, stream, weightMap["layer1.1.bn2.weight"].values, weightMap["layer1.1.bn2.bias"].values, weightMap["layer1.1.bn2.running_mean"].values, weightMap["layer1.1.bn2.running_var"].values, t_dims, 1.e-5f, 0);
 	memory layer1_elt_sum1_5 = eltwise_onednn(layer1_relu1_3, layer1_bn5, net, net_args, engine, stream);
 	memory layer1_relu1_5 = activation_onednn(layer1_elt_sum1_5, net, net_args, engine, stream);
 	// layer1 
@@ -112,19 +112,19 @@ void resnet18_v2(std::vector<primitive> &net, std::vector<std::unordered_map<int
 	tensor_dims t_dims2 = t_dims;
 	memory layer2_conv1_1 = conv2d_onednn_wo_bias(layer1_relu1_5, net, net_args, engine, stream, weightMap["layer2.0.conv1.weight"].values, t_dims, 128, 3, 3, 2, 2, 1, 1, 1, 1);
 	memory layer2_bn_relu1_1 = bn_onednn(layer2_conv1_1, net, net_args, engine, stream, weightMap["layer2.0.bn1.weight"].values, weightMap["layer2.0.bn1.bias"].values, weightMap["layer2.0.bn1.running_mean"].values, weightMap["layer2.0.bn1.running_var"].values, t_dims, 1.e-5f);
-	layer2_bn_relu1_1 = activation_onednn(layer2_bn_relu1_1, net, net_args, engine, stream);
+	//layer2_bn_relu1_1 = activation_onednn(layer2_bn_relu1_1, net, net_args, engine, stream);
 	memory layer2_conv1_2 = conv2d_onednn_wo_bias(layer2_bn_relu1_1, net, net_args, engine, stream, weightMap["layer2.0.conv2.weight"].values, t_dims, 128, 3, 3, 1, 1, 1, 1, 1, 1);
-	memory layer2_bn1_2 = bn_onednn(layer2_conv1_2, net, net_args, engine, stream, weightMap["layer2.0.bn2.weight"].values, weightMap["layer2.0.bn2.bias"].values, weightMap["layer2.0.bn2.running_mean"].values, weightMap["layer2.0.bn2.running_var"].values, t_dims, 1.e-5f);
+	memory layer2_bn1_2 = bn_onednn(layer2_conv1_2, net, net_args, engine, stream, weightMap["layer2.0.bn2.weight"].values, weightMap["layer2.0.bn2.bias"].values, weightMap["layer2.0.bn2.running_mean"].values, weightMap["layer2.0.bn2.running_var"].values, t_dims, 1.e-5f, 0);
 	memory layer2_down_conv1_2 = conv2d_onednn_wo_bias(layer1_relu1_5, net, net_args, engine, stream, weightMap["layer2.0.downsample.0.weight"].values, t_dims2, 128, 1, 1, 2, 2, 0, 0, 0, 0);
-	memory layer2_down_bn1_2 = bn_onednn(layer2_down_conv1_2, net, net_args, engine, stream, weightMap["layer2.0.downsample.1.weight"].values, weightMap["layer2.0.downsample.1.bias"].values, weightMap["layer2.0.downsample.1.running_mean"].values, weightMap["layer2.0.downsample.1.running_var"].values, t_dims, 1.e-5f);
+	memory layer2_down_bn1_2 = bn_onednn(layer2_down_conv1_2, net, net_args, engine, stream, weightMap["layer2.0.downsample.1.weight"].values, weightMap["layer2.0.downsample.1.bias"].values, weightMap["layer2.0.downsample.1.running_mean"].values, weightMap["layer2.0.downsample.1.running_var"].values, t_dims, 1.e-5f, 0);
 	memory layer2_elt_sum1_3 = eltwise_onednn(layer2_down_bn1_2, layer2_bn1_2, net, net_args, engine, stream);
 	memory layer2_relu1_3 = activation_onednn(layer2_elt_sum1_3, net, net_args, engine, stream);
 	// basicBlock2
 	memory layer2_conv1_4 = conv2d_onednn_wo_bias(layer2_relu1_3, net, net_args, engine, stream, weightMap["layer2.1.conv1.weight"].values, t_dims, 128, 3, 3, 1, 1, 1, 1, 1, 1);
 	memory layer2_bn_relu1_4 = bn_onednn(layer2_conv1_4, net, net_args, engine, stream, weightMap["layer2.1.bn1.weight"].values, weightMap["layer2.1.bn1.bias"].values, weightMap["layer2.1.bn1.running_mean"].values, weightMap["layer2.1.bn1.running_var"].values, t_dims, 1.e-5f);
-	layer2_bn_relu1_4 = activation_onednn(layer2_bn_relu1_4, net, net_args, engine, stream);
+	//layer2_bn_relu1_4 = activation_onednn(layer2_bn_relu1_4, net, net_args, engine, stream);
 	memory layer2_conv1_5 = conv2d_onednn_wo_bias(layer2_bn_relu1_4, net, net_args, engine, stream, weightMap["layer2.1.conv2.weight"].values, t_dims, 128, 3, 3, 1, 1, 1, 1, 1, 1);
-	memory layer2_bn5 = bn_onednn(layer2_conv1_5, net, net_args, engine, stream, weightMap["layer2.1.bn2.weight"].values, weightMap["layer2.1.bn2.bias"].values, weightMap["layer2.1.bn2.running_mean"].values, weightMap["layer2.1.bn2.running_var"].values, t_dims, 1.e-5f);
+	memory layer2_bn5 = bn_onednn(layer2_conv1_5, net, net_args, engine, stream, weightMap["layer2.1.bn2.weight"].values, weightMap["layer2.1.bn2.bias"].values, weightMap["layer2.1.bn2.running_mean"].values, weightMap["layer2.1.bn2.running_var"].values, t_dims, 1.e-5f, 0);
 	memory layer2_elt_sum1_5 = eltwise_onednn(layer2_relu1_3, layer2_bn5, net, net_args, engine, stream);
 	memory layer2_relu1_5 = activation_onednn(layer2_elt_sum1_5, net, net_args, engine, stream);
 	// layer2 
@@ -135,19 +135,19 @@ void resnet18_v2(std::vector<primitive> &net, std::vector<std::unordered_map<int
 	t_dims2 = t_dims;
 	memory layer3_conv1_1 = conv2d_onednn_wo_bias(layer2_relu1_5, net, net_args, engine, stream, weightMap["layer3.0.conv1.weight"].values, t_dims, 256, 3, 3, 2, 2, 1, 1, 1, 1);
 	memory layer3_bn_relu1_1 = bn_onednn(layer3_conv1_1, net, net_args, engine, stream, weightMap["layer3.0.bn1.weight"].values, weightMap["layer3.0.bn1.bias"].values, weightMap["layer3.0.bn1.running_mean"].values, weightMap["layer3.0.bn1.running_var"].values, t_dims, 1.e-5f);
-	layer3_bn_relu1_1 = activation_onednn(layer3_bn_relu1_1, net, net_args, engine, stream);
+	//layer3_bn_relu1_1 = activation_onednn(layer3_bn_relu1_1, net, net_args, engine, stream);
 	memory layer3_conv1_2 = conv2d_onednn_wo_bias(layer3_bn_relu1_1, net, net_args, engine, stream, weightMap["layer3.0.conv2.weight"].values, t_dims, 256, 3, 3, 1, 1, 1, 1, 1, 1);
-	memory layer3_bn1_2 = bn_onednn(layer3_conv1_2, net, net_args, engine, stream, weightMap["layer3.0.bn2.weight"].values, weightMap["layer3.0.bn2.bias"].values, weightMap["layer3.0.bn2.running_mean"].values, weightMap["layer3.0.bn2.running_var"].values, t_dims, 1.e-5f);
+	memory layer3_bn1_2 = bn_onednn(layer3_conv1_2, net, net_args, engine, stream, weightMap["layer3.0.bn2.weight"].values, weightMap["layer3.0.bn2.bias"].values, weightMap["layer3.0.bn2.running_mean"].values, weightMap["layer3.0.bn2.running_var"].values, t_dims, 1.e-5f, 0);
 	memory layer3_down_conv1_2 = conv2d_onednn_wo_bias(layer2_relu1_5, net, net_args, engine, stream, weightMap["layer3.0.downsample.0.weight"].values, t_dims2, 256, 1, 1, 2, 2, 0, 0, 0, 0);
-	memory layer3_down_bn1_2 = bn_onednn(layer3_down_conv1_2, net, net_args, engine, stream, weightMap["layer3.0.downsample.1.weight"].values, weightMap["layer3.0.downsample.1.bias"].values, weightMap["layer3.0.downsample.1.running_mean"].values, weightMap["layer3.0.downsample.1.running_var"].values, t_dims, 1.e-5f);
+	memory layer3_down_bn1_2 = bn_onednn(layer3_down_conv1_2, net, net_args, engine, stream, weightMap["layer3.0.downsample.1.weight"].values, weightMap["layer3.0.downsample.1.bias"].values, weightMap["layer3.0.downsample.1.running_mean"].values, weightMap["layer3.0.downsample.1.running_var"].values, t_dims, 1.e-5f, 0);
 	memory layer3_elt_sum1_3 = eltwise_onednn(layer3_down_bn1_2, layer3_bn1_2, net, net_args, engine, stream);
 	memory layer3_relu1_3 = activation_onednn(layer3_elt_sum1_3, net, net_args, engine, stream);
 	// basicBlock2
 	memory layer3_conv1_4 = conv2d_onednn_wo_bias(layer3_relu1_3, net, net_args, engine, stream, weightMap["layer3.1.conv1.weight"].values, t_dims, 256, 3, 3, 1, 1, 1, 1, 1, 1);
 	memory layer3_bn_relu1_4 = bn_onednn(layer3_conv1_4, net, net_args, engine, stream, weightMap["layer3.1.bn1.weight"].values, weightMap["layer3.1.bn1.bias"].values, weightMap["layer3.1.bn1.running_mean"].values, weightMap["layer3.1.bn1.running_var"].values, t_dims, 1.e-5f);
-	layer3_bn_relu1_4 = activation_onednn(layer3_bn_relu1_4, net, net_args, engine, stream);
+	//layer3_bn_relu1_4 = activation_onednn(layer3_bn_relu1_4, net, net_args, engine, stream);
 	memory layer3_conv1_5 = conv2d_onednn_wo_bias(layer3_bn_relu1_4, net, net_args, engine, stream, weightMap["layer3.1.conv2.weight"].values, t_dims, 256, 3, 3, 1, 1, 1, 1, 1, 1);
-	memory layer3_bn5 = bn_onednn(layer3_conv1_5, net, net_args, engine, stream, weightMap["layer3.1.bn2.weight"].values, weightMap["layer3.1.bn2.bias"].values, weightMap["layer3.1.bn2.running_mean"].values, weightMap["layer3.1.bn2.running_var"].values, t_dims, 1.e-5f);
+	memory layer3_bn5 = bn_onednn(layer3_conv1_5, net, net_args, engine, stream, weightMap["layer3.1.bn2.weight"].values, weightMap["layer3.1.bn2.bias"].values, weightMap["layer3.1.bn2.running_mean"].values, weightMap["layer3.1.bn2.running_var"].values, t_dims, 1.e-5f, 0);
 	memory layer3_elt_sum1_5 = eltwise_onednn(layer3_relu1_3, layer3_bn5, net, net_args, engine, stream);
 	memory layer3_relu1_5 = activation_onednn(layer3_elt_sum1_5, net, net_args, engine, stream);
 	// layer3 
@@ -158,19 +158,19 @@ void resnet18_v2(std::vector<primitive> &net, std::vector<std::unordered_map<int
 	t_dims2 = t_dims;
 	memory layer4_conv1_1 = conv2d_onednn_wo_bias(layer3_relu1_5, net, net_args, engine, stream, weightMap["layer4.0.conv1.weight"].values, t_dims, 512, 3, 3, 2, 2, 1, 1, 1, 1);
 	memory layer4_bn_relu1_1 = bn_onednn(layer4_conv1_1, net, net_args, engine, stream, weightMap["layer4.0.bn1.weight"].values, weightMap["layer4.0.bn1.bias"].values, weightMap["layer4.0.bn1.running_mean"].values, weightMap["layer4.0.bn1.running_var"].values, t_dims, 1.e-5f);
-	layer4_bn_relu1_1 = activation_onednn(layer4_bn_relu1_1, net, net_args, engine, stream);
+	//layer4_bn_relu1_1 = activation_onednn(layer4_bn_relu1_1, net, net_args, engine, stream);
 	memory layer4_conv1_2 = conv2d_onednn_wo_bias(layer4_bn_relu1_1, net, net_args, engine, stream, weightMap["layer4.0.conv2.weight"].values, t_dims, 512, 3, 3, 1, 1, 1, 1, 1, 1);
-	memory layer4_bn1_2 = bn_onednn(layer4_conv1_2, net, net_args, engine, stream, weightMap["layer4.0.bn2.weight"].values, weightMap["layer4.0.bn2.bias"].values, weightMap["layer4.0.bn2.running_mean"].values, weightMap["layer4.0.bn2.running_var"].values, t_dims, 1.e-5f);
+	memory layer4_bn1_2 = bn_onednn(layer4_conv1_2, net, net_args, engine, stream, weightMap["layer4.0.bn2.weight"].values, weightMap["layer4.0.bn2.bias"].values, weightMap["layer4.0.bn2.running_mean"].values, weightMap["layer4.0.bn2.running_var"].values, t_dims, 1.e-5f, 0);
 	memory layer4_down_conv1_2 = conv2d_onednn_wo_bias(layer3_relu1_5, net, net_args, engine, stream, weightMap["layer4.0.downsample.0.weight"].values, t_dims2, 512, 1, 1, 2, 2, 0, 0, 0, 0);
-	memory layer4_down_bn1_2 = bn_onednn(layer4_down_conv1_2, net, net_args, engine, stream, weightMap["layer4.0.downsample.1.weight"].values, weightMap["layer4.0.downsample.1.bias"].values, weightMap["layer4.0.downsample.1.running_mean"].values, weightMap["layer4.0.downsample.1.running_var"].values, t_dims, 1.e-5f);
+	memory layer4_down_bn1_2 = bn_onednn(layer4_down_conv1_2, net, net_args, engine, stream, weightMap["layer4.0.downsample.1.weight"].values, weightMap["layer4.0.downsample.1.bias"].values, weightMap["layer4.0.downsample.1.running_mean"].values, weightMap["layer4.0.downsample.1.running_var"].values, t_dims, 1.e-5f, 0);
 	memory layer4_elt_sum1_3 = eltwise_onednn(layer4_down_bn1_2, layer4_bn1_2, net, net_args, engine, stream);
 	memory layer4_relu1_3 = activation_onednn(layer4_elt_sum1_3, net, net_args, engine, stream);
 	// basicBlock2
 	memory layer4_conv1_4 = conv2d_onednn_wo_bias(layer4_relu1_3, net, net_args, engine, stream, weightMap["layer4.1.conv1.weight"].values, t_dims, 512, 3, 3, 1, 1, 1, 1, 1, 1);
 	memory layer4_bn_relu1_4 = bn_onednn(layer4_conv1_4, net, net_args, engine, stream, weightMap["layer4.1.bn1.weight"].values, weightMap["layer4.1.bn1.bias"].values, weightMap["layer4.1.bn1.running_mean"].values, weightMap["layer4.1.bn1.running_var"].values, t_dims, 1.e-5f);
-	layer4_bn_relu1_4 = activation_onednn(layer4_bn_relu1_4, net, net_args, engine, stream);
+	//layer4_bn_relu1_4 = activation_onednn(layer4_bn_relu1_4, net, net_args, engine, stream);
 	memory layer4_conv1_5 = conv2d_onednn_wo_bias(layer4_bn_relu1_4, net, net_args, engine, stream, weightMap["layer4.1.conv2.weight"].values, t_dims, 512, 3, 3, 1, 1, 1, 1, 1, 1);
-	memory layer4_bn5 = bn_onednn(layer4_conv1_5, net, net_args, engine, stream, weightMap["layer4.1.bn2.weight"].values, weightMap["layer4.1.bn2.bias"].values, weightMap["layer4.1.bn2.running_mean"].values, weightMap["layer4.1.bn2.running_var"].values, t_dims, 1.e-5f);
+	memory layer4_bn5 = bn_onednn(layer4_conv1_5, net, net_args, engine, stream, weightMap["layer4.1.bn2.weight"].values, weightMap["layer4.1.bn2.bias"].values, weightMap["layer4.1.bn2.running_mean"].values, weightMap["layer4.1.bn2.running_var"].values, t_dims, 1.e-5f, 0);
 	memory layer4_elt_sum1_5 = eltwise_onednn(layer4_relu1_3, layer4_bn5, net, net_args, engine, stream);
 	memory layer4_relu1_5 = activation_onednn(layer4_elt_sum1_5, net, net_args, engine, stream);
 	// layer4 
@@ -292,7 +292,7 @@ memory conv2d_onednn_wo_bias(memory &INPUT, std::vector<primitive> &net, std::ve
 
 	// Activation func
 	convolution_forward::primitive_desc conv2_prim_desc = convolution_forward::primitive_desc(conv2_desc, engine);
-	
+
 	auto conv2_src_memory = INPUT;
 	if (conv2_prim_desc.src_desc() != INPUT.get_desc()) {
 		conv2_src_memory = memory(conv2_prim_desc.src_desc(), engine);
@@ -325,7 +325,7 @@ memory conv2d_onednn_wo_bias(memory &INPUT, std::vector<primitive> &net, std::ve
 
 memory bn_onednn(memory &INPUT, std::vector<primitive> &net, std::vector<std::unordered_map<int, memory>> &net_args, engine &engine, stream &engine_stream,
 	std::vector<float> &scale, std::vector<float> &shift, std::vector<float> &mean, std::vector<float> &var,
-	tensor_dims &t_dims, float eps)
+	tensor_dims &t_dims, float eps, int Acti)
 {
 	std::vector<float> scale_shift(2 * t_dims.IC);
 	memcpy(scale_shift.data(), scale.data(), sizeof(float) * t_dims.IC);
@@ -346,28 +346,66 @@ memory bn_onednn(memory &INPUT, std::vector<primitive> &net, std::vector<std::un
 	// Create primitive descriptor.
 	batch_normalization_forward::primitive_desc bnorm_pd;
 
-	auto bnorm_d = batch_normalization_forward::desc(prop_kind::forward_inference, INPUT.get_desc(), 1.e-5f,
-		normalization_flags::use_global_stats | normalization_flags::use_scale_shift);
-	bnorm_pd = batch_normalization_forward::primitive_desc(bnorm_d, engine);
-	
+	if (Acti == 1) { // relu
+		auto bnorm_d = batch_normalization_forward::desc(prop_kind::forward_inference, INPUT.get_desc(), eps,
+			//normalization_flags::use_global_stats | normalization_flags::use_scale_shift | normalization_flags::fuse_norm_relu);
+			normalization_flags::use_global_stats | normalization_flags::use_scale_shift | normalization_flags::fuse_norm_relu);
+		bnorm_pd = batch_normalization_forward::primitive_desc(bnorm_d, engine);
+
+		// Create primitive post-ops (ReLU).
+		const float scale = 1.f;
+		const float alpha = 0.f;
+		const float beta = 0.f;
+		post_ops conv_ops;
+		conv_ops.append_eltwise(scale, algorithm::eltwise_relu, alpha, beta);
+		primitive_attr conv_attr;
+		conv_attr.set_post_ops(conv_ops);
+		bnorm_pd = batch_normalization_forward::primitive_desc(bnorm_d, conv_attr, engine);
+
+	}
+	else { // linear
+		auto bnorm_d = batch_normalization_forward::desc(prop_kind::forward_inference, INPUT.get_desc(), 1.e-5f,
+			normalization_flags::use_global_stats | normalization_flags::use_scale_shift);
+		bnorm_pd = batch_normalization_forward::primitive_desc(bnorm_d, engine);
+	}
+
+	memory workspace_mem;
+
+	if (Acti == 1) {
+		workspace_mem = memory(bnorm_pd.workspace_desc(), engine); // create a memory (even if empty)
+	}
+
 	// Create the primitive.
 	auto OUTPUT = memory(bnorm_pd.dst_desc(), engine);
 
 	net.push_back(batch_normalization_forward(bnorm_pd));
-	net_args.push_back({
-		{ DNNL_ARG_SRC, INPUT },
-		{ DNNL_ARG_MEAN, mean_mem },
-		{ DNNL_ARG_VARIANCE, variance_mem },
-		{ DNNL_ARG_SCALE_SHIFT, scale_shift_mem },
-		{ DNNL_ARG_DST, OUTPUT }
-		});
+
+	std::unordered_map<int, memory> bnorm_args;
+	bnorm_args.insert({ DNNL_ARG_SRC, INPUT });
+	bnorm_args.insert({ DNNL_ARG_MEAN, mean_mem });
+	bnorm_args.insert({ DNNL_ARG_VARIANCE, variance_mem });
+	bnorm_args.insert({ DNNL_ARG_SCALE_SHIFT, scale_shift_mem });
+	if (Acti == 1) {
+		bnorm_args.insert({ DNNL_ARG_WORKSPACE, workspace_mem });
+	}
+	bnorm_args.insert({ DNNL_ARG_DST, OUTPUT });
+	net_args.push_back(bnorm_args);
+
+	//net_args.push_back({
+	//	{ DNNL_ARG_SRC, INPUT },
+	//	{ DNNL_ARG_MEAN, mean_mem },
+	//	{ DNNL_ARG_VARIANCE, variance_mem },
+	//	{ DNNL_ARG_SCALE_SHIFT, scale_shift_mem },
+	//	{ DNNL_ARG_WORKSPACE, workspace_mem},
+	//	{ DNNL_ARG_DST, OUTPUT }
+	//	});
 	return OUTPUT;
 }
 
 memory pooling_onednn(memory &INPUT, std::vector<primitive> &net, std::vector<std::unordered_map<int, memory>> &net_args, engine &engine, stream &engine_stream,
 	tensor_dims &t_dims,
 	int KH, int KW, int	SH, int SW, int DH, int DW, int TP, int BP, int LP, int RP,
-	 int mode)
+	int mode)
 {
 	const memory::dim OH = (t_dims.IH + (TP + BP) - (DH * (KH - 1) + KH)) / SH + 1;
 	const memory::dim OW = (t_dims.IW + (LP + RP) - (DW * (KW - 1) + KW)) / SW + 1;

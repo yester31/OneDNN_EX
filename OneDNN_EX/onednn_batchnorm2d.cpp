@@ -36,39 +36,39 @@ void simple_net(engine::kind engine_kind, int times = 100) {
 	std::vector<primitive> net;
 	std::vector<std::unordered_map<int, memory>> net_args;
 
-	int OC = 64;
+	//int OC = 64;
+	//int N = 1;
+	//int IC = 3;
+	//int IH = 224;
+	//int IW = 224;
+	//int KH = 7;
+	//int KW = 7;
+	//int SH = 2;
+	//int SW = 2;
+	//int TP = 3;
+	//int BP = 3;
+	//int LP = 3;
+	//int RP = 3;
+
+	int OC = 1;
 	int N = 1;
-	int IC = 3;
-	int IH = 224;
-	int IW = 224;
-	int KH = 7;
-	int KW = 7;
+	int IC = 1;
+	int IH = 4;
+	int IW = 4;
+	int KH = 2;
+	int KW = 2;
 	int SH = 2;
 	int SW = 2;
-	int TP = 3;
-	int BP = 3;
-	int LP = 3;
-	int RP = 3;
-
-	//int OC = 3;
-	//int N = 1;
-	//int IC = 1;
-	//int IH = 4;
-	//int IW = 4;
-	//int KH = 3;
-	//int KW = 3;
-	//int SH = 1;
-	//int SW = 1;
-	//int TP = 0;
-	//int BP = 0;
-	//int LP = 0;
-	//int RP = 0;
+	int TP = 0;
+	int BP = 0;
+	int LP = 0;
+	int RP = 0;
 	
 	// weight[OC][lC][KH][KW] 
 	// 임시 weight 값 
 	std::vector<float> weights(OC * IC * KH * KW);
 	initTensor(weights, weights.size(), 1, 0);
-	//valueCheck(weights, OC, IC, KH, KW);
+	valueCheck(weights, OC, IC, KH, KW);
 
 	// bias[OC]
 	// 임시 bias 값
@@ -88,8 +88,8 @@ void simple_net(engine::kind engine_kind, int times = 100) {
 	// d[N][IC][IH][IW] 
 	// 임시 input 값 
 	std::vector<float> inputs(N * IC * IH * IW);
-	initTensor(inputs, inputs.size(), -5, 1);
-	//valueCheck(inputs, N, IC, IH, IW);
+	initTensor(inputs, inputs.size(), int(inputs.size()/2)*(-1), 1);
+	valueCheck(inputs, N, IC, IH, IW);
 
 	//[inputs]
 	auto conv_src_md = memory::desc({ N, IC, IH, IW }, dt::f32, tag::nchw);
@@ -108,7 +108,7 @@ void simple_net(engine::kind engine_kind, int times = 100) {
 		output_s,
 		net, net_args, engine, stream,
 		scale, shift, mean, var,
-		t_dims, 1.e-5f, 0);
+		t_dims, 1.e-5f, 1);
 
 	//[Execute model]
 	auto begin = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
@@ -123,7 +123,7 @@ void simple_net(engine::kind engine_kind, int times = 100) {
 
 	std::vector<float> outputs(t_dims.N * t_dims.IC* t_dims.IH* t_dims.IW);
 	read_from_dnnl_memory(outputs.data(), net_args.at(net.size()-1).find(DNNL_ARG_DST)->second);
-	//valueCheck(outputs, t_dims.N , t_dims.IC, t_dims.IH, t_dims.IW);
+	valueCheck(outputs, t_dims.N , t_dims.IC, t_dims.IH, t_dims.IW);
 	tofile(outputs);
 	std::cout << "Use time: " << (end - begin) << " ms per iteration." << std::endl;
 	std::cout << "done!!!" << std::endl;
