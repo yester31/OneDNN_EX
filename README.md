@@ -18,18 +18,39 @@
 - Match all results with PyTorch 
 - Optimization 
 - Performace evaluation(Execution time of 100 iteration for one 224x224x3 image)
-- 1) Reference PyTorch (Resnet18_py/inference.py)
-        - 2759 [ms] (36 FPS)
-- 2) Specific data type version (resnet18_v1.cpp)  
-        - 6765 [ms] (15 FPS)
-- 3) Any data type version (resnet18_v2.cpp)
-        - 2440 [ms] (41 FPS)
-- 4) Any data type + fused post ops version (resnet18_v3.cpp)
-        - 2281 [ms] (44 FPS)
 
-
-## Custom Primitive using DPC++(preparing)
--
+<table border="0"  width="100%">
+	<tbody align="center">
+		<tr>
+			<td></td>
+			<td><strong>Pytorch</strong></td><td><strong>OneDNN</strong></td><td><strong>OneDNN</strong></td><td><strong>OneDNN</strong></td>
+		</tr>
+		<tr>
+			<td>Description</td><td>general</td><td>Specific data type</td><td>Any data type</td><td>Any data type + fused post ops</td>
+		</tr>
+		<tr>
+			<td>Avg Duration time [ms]</td>
+			<td>27.59 ms</td>
+			<td>67.65 ms </td>
+			<td>24.40 ms</td>
+			<td>22.81 ms</td>
+		</tr>
+		<tr>
+			<td>FPS [frame/sec]</td>
+			<td>36 fps</td>
+			<td>15 fps</td>
+			<td>41 fps</td>
+			<td>44 fps</td>
+		</tr>
+		<tr>
+			<td>File</td>
+			<td>Resnet18_py/inference.py</td>
+			<td>resnet18_v1.cpp</td>
+			<td>resnet18_v2.cpp</td>
+			<td>resnet18_v3.cpp</td>
+		</tr>
+	</tbody>
+</table>
 
 
 ## Reference
